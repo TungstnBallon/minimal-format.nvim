@@ -64,9 +64,13 @@ function M.format_with_formatprg(bufnr, background)
       if exit_code > 0 then
         if not background then
           for _, line in ipairs(outputs[job_id]["all"]) do
-            vim.api.nvim_err_writeln(line)
+            vim.api.nvim_echo(line, true, { err = true })
           end
-          vim.api.nvim_err_writeln("formatprg '" .. prg .. "' failed with code " .. exit_code)
+          vim.api.nvim_echo(
+            "formatprg '" .. prg .. "' failed with code " .. exit_code,
+            true,
+            { err = true }
+          )
         end
         return
       end
@@ -75,7 +79,7 @@ function M.format_with_formatprg(bufnr, background)
       table.remove(formatted_lines)
       if #formatted_lines == 0 then
         if not background then
-          vim.api.nvim_err_writeln("formatprg '" .. prg .. "' did not emit anything")
+          vim.api.nvim_echo("formatprg '" .. prg .. "' did not emit anything", true, { err = true })
         end
         return
       end
@@ -128,7 +132,9 @@ function M.format_with_formatprg(bufnr, background)
         table.concat(vim.api.nvim_buf_get_lines(bufnr, 0, -1, true), "\n")
         ~= table.concat(formatted_lines, "\n")
       then
-        vim.api.nvim_err_writeln "Did not apply the format patch correctly, please report a bug at https://cj.rs/minimal-format-nvim-bug"
+        vim.api.nvim_echo({
+          "Did not apply the format patch correctly, please report a bug at https://cj.rs/minimal-format-nvim-bug",
+        }, true, { err = true })
         vim.api.nvim_buf_set_lines(bufnr, 0, -1, true, formatted_lines)
       end
     end,
@@ -143,7 +149,7 @@ function M.format_with_formatprg(bufnr, background)
   end
   local wait_res = vim.fn.jobwait({ job_id }, timeout)
   if wait_res[1] == -1 then
-    vim.api.nvim_err_writeln("formatprg '" .. prg .. "' took too long")
+    vim.api.nvim_echo("formatprg '" .. prg .. "' took too long", true, { err = true })
     vim.fn.jobstop(job_id)
   end
 end
@@ -172,7 +178,7 @@ end
 local disable_autocmd = function(auto_cmds, bufnr)
   local autocmds = auto_cmds or find_autocmds(bufnr)
   if #autocmds > 1 then
-    vim.api.nvim_err_writeln "Too many autocmds found, aborting"
+    vim.api.nvim_echo({ "Too many autocmds found, aborting" }, true, { err = true })
   end
   vim.api.nvim_del_autocmd(autocmds[1].id)
 end
